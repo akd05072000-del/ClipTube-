@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>यूट्यूब क्लिप डाउनलोडर</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 50px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
+        h2 { color: #ff0000; }
+        p { color: #555; font-size: 14px; margin-bottom: 20px; }
+        input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        button { background: #ff0000; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; width: 95%; font-weight: bold; margin-top: 10px; }
+        button:hover { background: #cc0000; }
+        button:disabled { background: #ff9999; cursor: not-allowed; }
+        #status { margin-top: 20px; font-weight: bold; color: #28a745; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>यूट्यूब क्लिप डाउनलोडर</h2>
+        <p>पूरी वीडियो डाउनलोड करने की जरूरत नहीं! अपना डेटा बचाएं और सिर्फ काम का हिस्सा डाउनलोड करें।</p>
+
+        <input type="text" id="url" placeholder="यूट्यूब वीडियो की लिंक (URL) डालें">
+        <input type="text" id="start" placeholder="शुरुआती समय (जैसे 00:01:00)">
+        <input type="text" id="end" placeholder="खत्म होने का समय (जैसे 00:01:30)">
+
+        <button onclick="downloadClip()" id="dl-btn">वीडियो क्लिप डाउनलोड करें</button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        async function downloadClip() {
+            const url = document.getElementById('url').value;
+            const start = document.getElementById('start').value;
+            const end = document.getElementById('end').value;
+            const statusText = document.getElementById('status');
+            const btn = document.getElementById('dl-btn');
+
+            if(!url || !start || !end) {
+                alert("कृपया वीडियो की लिंक और समय (Timestamp) भरें!");
+                return;
+            }
+
+            statusText.innerText = "वीडियो प्रोसेस हो रही है... कृपया पेज बंद न करें।";
+            statusText.style.color = "#007bff";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, start, end })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = "YT_Clip.mp4";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    statusText.innerText = "🎉 डाउनलोड सफल रहा!";
+                    statusText.style.color = "#28a745";
+                } else {
+                    statusText.innerText = "❌ कुछ गड़बड़ हो गई। कृपया लिंक और समय चेक करें।";
+                    statusText.style.color = "#dc3545";
+                }
+            } catch (error) {
+                statusText.innerText = "एरर: सर्वर से कनेक्ट नहीं हो सका।";
+                statusText.style.color = "#dc3545";
+            }
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
